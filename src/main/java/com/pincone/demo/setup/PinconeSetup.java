@@ -1,5 +1,6 @@
-package com.pincone.demo;
+package com.pincone.demo.setup;
 
+import com.pincone.demo.SampleDataSet;
 import io.pinecone.clients.Index;
 import io.pinecone.clients.Pinecone;
 import io.pinecone.configs.PineconeConfig;
@@ -11,6 +12,7 @@ import org.openapitools.db_control.client.model.DeletionProtection;
 import org.openapitools.db_control.client.model.IndexModel;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class PinconeSetup {
 
@@ -21,7 +23,7 @@ public class PinconeSetup {
         index.upsertRecords(namespace, SampleDataSet.prepareDataSet());
     }
 
-    public static Index getIndex(String apiKey, String indexName, String region, String embedModel, String host,HashMap<String, String> fieldMap) throws ApiException {
+    public static Index getIndex(String apiKey, String indexName, String region, String embedModel, String host, Map fieldMap) throws ApiException {
         PineconeConfig config = new PineconeConfig(apiKey);
         Pinecone pinecone = new Pinecone.Builder(apiKey).build();
         boolean isPresent = pinecone.listIndexes().getIndexes().stream().peek(System.out::println).anyMatch(e->e.getName().equals(indexName));
@@ -35,7 +37,7 @@ public class PinconeSetup {
         return index;
     }
 
-    private static void createIndex(String indexName, String region, String embedModel, Pinecone pinecone,HashMap<String,String> fieldMap) throws ApiException {
+    private static void createIndex(String indexName, String region, String embedModel, Pinecone pinecone,Map fieldMap) throws ApiException {
         CreateIndexForModelRequestEmbed embed = new CreateIndexForModelRequestEmbed()
                 .model(embedModel)
                 .fieldMap(fieldMap);

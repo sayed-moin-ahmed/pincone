@@ -1,10 +1,11 @@
 package com.pincone.demo;
 
+import com.pincone.demo.setup.MongoToPinconeETL;
 import lombok.extern.slf4j.Slf4j;
-import org.openapitools.db_control.client.ApiException;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.context.ApplicationContext;
 
 @Slf4j
 @ConfigurationPropertiesScan("com.pincone.demo.config")
@@ -12,13 +13,10 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 public class DemoApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(DemoApplication.class, args);
-        try {
-            PinconeSetup.test("pcsk_6Cd7SR_DvYGvKARiWruuRcZSw16ktrdDzWU4mZrSnE8uQzuxbuQxtLoMwq9SBYbpzQwQVg", "developer-quickstart-java",
-                    "us-east-1","llama-text-embed-v2" ,"developer-quickstart-java-1hq0mmd.svc.aped-4627-b74a.pinecone.io","example-namespace");
-        }catch (Throwable e) {
-            log.error("Error:",e);
-        }
+        ApplicationContext ctx = SpringApplication.run(DemoApplication.class, args);
+        // Get the ETL service bean and trigger dump
+        MongoToPinconeETL etl = ctx.getBean(MongoToPinconeETL.class);
+        etl.dump();
     }
 
 }
