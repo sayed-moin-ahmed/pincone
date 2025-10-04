@@ -14,8 +14,8 @@ public class DemoApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(DemoApplication.class, args);
         try {
-            PinconeSetup.setup("pcsk_6Cd7SR_DvYGvKARiWruuRcZSw16ktrdDzWU4mZrSnE8uQzuxbuQxtLoMwq9SBYbpzQwQVg", "developer-quickstart-java",
-                    "us-east-1","llama-text-embed-v2" ,"developer-quickstart-java-1hq0mmd.svc.aped-4627-b74a.pinecone.io");
+            PinconeSetup.test("pcsk_6Cd7SR_DvYGvKARiWruuRcZSw16ktrdDzWU4mZrSnE8uQzuxbuQxtLoMwq9SBYbpzQwQVg", "developer-quickstart-java",
+                    "us-east-1","llama-text-embed-v2" ,"developer-quickstart-java-1hq0mmd.svc.aped-4627-b74a.pinecone.io","example-namespace");
         }catch (Throwable e) {
             log.error("Error:",e);
         }
