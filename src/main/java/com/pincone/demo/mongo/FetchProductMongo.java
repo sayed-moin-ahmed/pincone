@@ -23,10 +23,11 @@ public class FetchProductMongo {
 
     public List<PineconeRecord> load() {
         var productNextory = mongoDBClientImpl.getMongoCollection(noSQLConfigProperties.getNextoryschema(), noSQLCollections.getProductnextory()).get();
-        var pinconeRecords = StreamSupport.stream(productNextory.find().spliterator(), true)
+        var pinconeRecords = StreamSupport.stream(productNextory.find().limit(95).spliterator(), true)
                 .filter(Objects::nonNull)
                 .peek(System.out::println)
                 .map(MongoToPinconeRecordUtility::prepareRecord)
+                .flatMap(List::stream)
                 .toList();
         return pinconeRecords;
     }
