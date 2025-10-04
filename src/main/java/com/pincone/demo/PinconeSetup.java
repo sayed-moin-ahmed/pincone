@@ -4,7 +4,6 @@ import io.pinecone.clients.Index;
 import io.pinecone.clients.Pinecone;
 import io.pinecone.configs.PineconeConfig;
 import io.pinecone.configs.PineconeConnection;
-import io.pinecone.proto.UpsertResponse;
 import org.openapitools.db_control.client.ApiException;
 import org.openapitools.db_control.client.model.CreateIndexForModelRequest;
 import org.openapitools.db_control.client.model.CreateIndexForModelRequestEmbed;
