@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Service
@@ -20,38 +21,39 @@ public class MongoToPinconeETL {
     private final ObjectMapper mapper = new ObjectMapper();
 
     public void dump(){
+        AtomicInteger skippedRecords = new AtomicInteger(0);
         try {
 
             var index = PinconeSetup.getIndex("pcsk_6Cd7SR_DvYGvKARiWruuRcZSw16ktrdDzWU4mZrSnE8uQzuxbuQxtLoMwq9SBYbpzQwQVg", "product-info",
-                    "us-east-1","llama-text-embed-v2" ,"developer-quickstart-java-1hq0mmd.svc.aped-4627-b74a.pinecone.io", fieldMap());
+                    "us-east-1","llama-text-embed-v2" ,"product-info-1hq0mmd.svc.aped-4627-b74a.pinecone.io", fieldMap());
 
             List<Map<String, String>> allRecords = fetchProductMongo.load()
                     .stream()
-                    .filter(record -> record!=null && record.chunkText() != null && !record.chunkText().isBlank()) // filter out empty chunk_text
                     .map(record ->
                             Map.of(
                                     "id", record.id(),
                                     "vector", toJsonString(record.vector()),
                                     "metadata", toJsonString(record.metadata()),
-                                    "chunk_text", record.chunkText() // changed from "text" to "chunk_text"
+                                    "chunk_text", record.chunkText()
                             )
                     )
                     .toList();
-            int batchSize = 90;
-            for (int i = 0; i < allRecords.size(); i += batchSize) {
-                List<Map<String, String>> batch = allRecords.subList(i, Math.min(i + batchSize, allRecords.size()));
-                if (batch.isEmpty()) {
-                    log.warn("Skipping empty batch at index {}", i);
-                    continue;
-                }
-                boolean hasEmptyChunkText = batch.stream().anyMatch(map -> !map.containsKey("chunk_text") || map.get("chunk_text") == null || map.get("chunk_text").isBlank());
-                if (hasEmptyChunkText) {
-                    log.error("Batch at index {} contains empty or missing 'chunk_text'. Skipping this batch.", i);
-                    continue;
-                }
-                index.upsertRecords("books-namespace", batch);
-            }
 
+                try {
+                    var testRecord = Map.of(
+                            "id", "test-123",
+                            "vector", "[0.1, 0.2, 0.3]",
+                            "metadata", "{\"source\":\"unit-test\"}",
+                            "chunk_text", "Hello Pinecone"
+                    );
+                    index.upsertRecords("books-namespace", List.of(testRecord));
+                    index.upsertRecords("books-namespace", allRecords);
+                }catch (Throwable throwable){
+                    log.info("Batch Content:{}",mapper.writeValueAsString(allRecords));
+                }
+
+
+            log.info("Total records skipped due to blank or null chunk_text: {}", skippedRecords.get());
         } catch (Throwable e) {
             log.error("Error:",e);
         }
@@ -66,48 +68,7 @@ public class MongoToPinconeETL {
 
     private HashMap<String, String> fieldMap() {
         HashMap<String, String> fieldMap = new HashMap<>();
-
-        fieldMap.put("_id", "id");
-        fieldMap.put("isbn", "isbn_code");
-        fieldMap.put("activeonnest", "active_on_nest");
-        fieldMap.put("aptusid", "aptus_id");
-        fieldMap.put("authors", "authors_list");
-        fieldMap.put("authorslug", "authors_slug");
-        fieldMap.put("book_type", "book_type");
-        fieldMap.put("categoryids", "category_ids");
-        fieldMap.put("description", "text");
-        fieldMap.put("filedeletedate", "file_delete_date");
-        fieldMap.put("formats", "formats");
-        fieldMap.put("image", "image_info");
-        fieldMap.put("language", "language");
-        fieldMap.put("market_details", "market_details");
-        fieldMap.put("narrators", "narrators_list");
-        fieldMap.put("netpriceupdatedon", "net_price_updated_on");
-        fieldMap.put("productstatus", "product_status");
-        fieldMap.put("producttype", "product_type");
-        fieldMap.put("publisheddate", "published_date");
-        fieldMap.put("publisher", "publisher_info");
-        fieldMap.put("ratings", "ratings_info");
-        fieldMap.put("title", "book_title");
-        fieldMap.put("title_cleansed", "title_cleansed");
-        fieldMap.put("titleslug", "title_slug");
-        fieldMap.put("translators", "translators_list");
-        fieldMap.put("updateddate", "updated_date");
-        fieldMap.put("content_type", "content_type");
-        fieldMap.put("authors_ids", "authors_ids");
-        fieldMap.put("blurb", "blurb_text");
-        fieldMap.put("guided_view", "guided_view");
-        fieldMap.put("is_free", "is_free");
-        fieldMap.put("narrators_ids", "narrators_ids");
-        fieldMap.put("popularity_score", "popularity_score");
-        fieldMap.put("preview", "preview");
-        fieldMap.put("product_classification", "product_classification");
-        fieldMap.put("moirai_id", "moirai_id");
-        fieldMap.put("markets", "markets");
-        fieldMap.put("syncdate", "sync_date");
-        fieldMap.put("updateddate_iso", "updated_date_iso");
-        fieldMap.put("filedeletedate_iso", "file_delete_date_iso");
-        fieldMap.put("text", "chunk_text");
+        fieldMap.put("chunk_text","chunk_text");
         return fieldMap;
     }
 

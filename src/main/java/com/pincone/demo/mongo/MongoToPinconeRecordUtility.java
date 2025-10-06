@@ -25,6 +25,17 @@ public class MongoToPinconeRecordUtility {
         return records;
     }
 
+    public static PineconeRecord prepareRecord1(Document doc) {
+        List<PineconeRecord> records = new ArrayList<>();
+        String docId = doc.getInteger("_id").toString();
+        return new PineconeRecord(
+                UUID.randomUUID().toString(),
+                null,
+                Map.of("mongo_id", docId),
+                doc.toString()
+        );
+    }
+
     private static void flattenDocument(Object value, String docId, List<PineconeRecord> records, String parentKey) {
         if (value instanceof Document) {
             Document doc = (Document) value;
