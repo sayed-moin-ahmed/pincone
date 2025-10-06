@@ -10,8 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.stream.Collectors.toList;
-
 @Slf4j
 @Service
 @AllArgsConstructor
@@ -29,16 +27,17 @@ public class MongoToPinconeETL {
 
             List<Map<String, String>> allRecords = fetchProductMongo.load()
                     .stream()
+                    .filter(record -> record!=null && record.chunkText() != null && !record.chunkText().isBlank()) // filter out empty chunk_text
                     .map(record ->
                             Map.of(
                                     "id", record.id(),
                                     "vector", toJsonString(record.vector()),
                                     "metadata", toJsonString(record.metadata()),
-                                    "text", record.chunkText()
+                                    "chunk_text", record.chunkText() // changed from "text" to "chunk_text"
                             )
                     )
                     .toList();
-            int batchSize = 95;
+            int batchSize = 90;
             for (int i = 0; i < allRecords.size(); i += batchSize) {
                 List<Map<String, String>> batch = allRecords.subList(i, Math.min(i + batchSize, allRecords.size()));
                 index.upsertRecords("books-namespace", batch);
