@@ -14,9 +14,6 @@ public class DemoApplication {
 
 	public static void main(String[] args) {
         ApplicationContext ctx = SpringApplication.run(DemoApplication.class, args);
-        // Get the ETL service bean and trigger dump
-        MongoToPinconeETL etl = ctx.getBean(MongoToPinconeETL.class);
-        etl.dump();
     }
 
 }
