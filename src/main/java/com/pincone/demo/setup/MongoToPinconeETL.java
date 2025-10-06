@@ -40,6 +40,15 @@ public class MongoToPinconeETL {
             int batchSize = 90;
             for (int i = 0; i < allRecords.size(); i += batchSize) {
                 List<Map<String, String>> batch = allRecords.subList(i, Math.min(i + batchSize, allRecords.size()));
+                if (batch.isEmpty()) {
+                    log.warn("Skipping empty batch at index {}", i);
+                    continue;
+                }
+                boolean hasEmptyChunkText = batch.stream().anyMatch(map -> !map.containsKey("chunk_text") || map.get("chunk_text") == null || map.get("chunk_text").isBlank());
+                if (hasEmptyChunkText) {
+                    log.error("Batch at index {} contains empty or missing 'chunk_text'. Skipping this batch.", i);
+                    continue;
+                }
                 index.upsertRecords("books-namespace", batch);
             }
 
